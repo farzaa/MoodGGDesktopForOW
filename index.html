@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+  <head>
+     <meta charset="utf-8">
+    <title>Mood.gg Desktop (Overwatch Edition)</title>
+    <link rel="stylesheet" type="text/css" href="index.css"></link>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Insert this line above script imports  -->
+    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+    <!-- normal script imports etc  -->
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+
+
+    <!-- Insert this line after script imports -->
+    <script>if (window.module) module = window.module;</script>
+
+  <script src="./js/vis.js?v=2"></script>
+  <script src="./js/util.js"></script>
+  <script src="./js/convnet.js??v=2"></script>
+
+  <script src="./js/image-helpers.js?v=2"></script>
+  <script src="./js/pica.js"></script>
+
+  <script src="./js/ow_labels.js"></script>
+
+  <script type="text/javascript">
+    // ------------------------
+    // BEGIN CIFAR-10 SPECIFIC STUFF
+    // ------------------------
+    classes_txt = ['Soldier', "Genji"];
+    var dataset_name = "ow";
+    var num_batches = 5; // 20 training batches, 1 test
+    var test_batch = 4;
+    var num_samples_per_batch = 500;
+    var image_dimension  = 32;
+    var image_channels = 3;
+    var use_validation_data = true;
+    var random_flip = true;
+    var random_position = true;
+
+    var layer_defs, net, trainer;
+    var t = "layer_defs = [];\n\
+    layer_defs.push({type:'input', out_sx:32, out_sy:32, out_depth:3});\n\
+    layer_defs.push({type:'conv', sx:5, filters:16, stride:1, pad:2, activation:'relu'});\n\
+    layer_defs.push({type:'pool', sx:2, stride:2});\n\
+    layer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});\n\
+    layer_defs.push({type:'pool', sx:2, stride:2});\n\
+    layer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});\n\
+    layer_defs.push({type:'pool', sx:2, stride:2});\n\
+    layer_defs.push({type:'softmax', num_classes:2});\n\
+    \n\
+    net = new convnetjs.Net();\n\
+    net.makeLayers(layer_defs);\n\
+    \n\
+    trainer = new convnetjs.SGDTrainer(net, {method:'adadelta', batch_size:4, l2_decay:0.0001});\n\
+    ";
+    // ------------------------
+    // END CIFAR-10 SPECIFIC STUFF
+    // ------------------------
+  </script>
+  <script src="./js/images-demo.js"></script>
+  </head>
+  <body style="width:100%; height:100%; padding:0; margin:0;">
+
+    <div id ="setBindingsBox" style="display: none;">
+
+      <div id ="settings" class="verticalHorizontalCenter row">
+      Settings
+      </br>
+      <span style="font-size: 3vh;"> <span onClick="clearStorageButton();"> Click the X to save your settings!  </span></span>
+      </div>
+
+      <div class="verticalHorizontalCenter row">
+        <div id = "buttonTitle" class="trans buttonTitle">
+          <div class="verticalHorizontalCenterText"> Prev </div>
+        </div>
+
+        <div style="float:left; width: 15vh;" class="trans">
+          <div class="verticalHorizontalCenterText"> Shift </div>
+        </div>
+
+        <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
+          <div class="verticalHorizontalCenterText"> + </div>
+        </div>
+
+        <button style="float:left; margin-left: 10px;" id="PREVSONGKEY" class="keyOneButton">   <div style="width:100%;" id="prevButtonText" class="verticalHorizontalCenterText">K [click to change] </div>
+        </button>
+      </div>
+
+      <div class="verticalHorizontalCenter row">
+        <div id = "buttonTitle" class="trans buttonTitle">
+          <div class="verticalHorizontalCenterText"> Play/Pause </div>
+        </div>
+
+        <div style="float:left; width: 15vh;" class="trans">
+          <div class="verticalHorizontalCenterText"> Shift </div>
+        </div>
+
+        <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
+          <div class="verticalHorizontalCenterText"> + </div>
+        </div>
+
+        <button style="float:left; margin-left: 10px;" id="PLAYSONGKEY" class="keyOneButton">   <div style="width:100%;" id="playButtonText" class="verticalHorizontalCenterText">B [click to change] </div>
+        </button>
+      </div>
+
+      <div class="verticalHorizontalCenter row">
+        <div id = "buttonTitle" class="trans buttonTitle">
+          <div class="verticalHorizontalCenterText"> Next </div>
+        </div>
+
+        <div style="float:left; width: 15vh;" class="trans">
+          <div class="verticalHorizontalCenterText"> Shift </div>
+        </div>
+
+        <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
+          <div class="verticalHorizontalCenterText"> + </div>
+        </div>
+
+        <button style="float:left; margin-left: 10px;" id="NEXTSONGKEY" class="keyOneButton">   <div style="width:100%;" id="nextButtonText" class="verticalHorizontalCenterText">K [click to change] </div>
+        </button>
+      </div>
+
+      <div class="verticalHorizontalCenter row">
+        <div id = "buttonTitle" class="trans buttonTitle">
+          <div class="verticalHorizontalCenterText"> Vol. Down </div>
+        </div>
+
+        <div style="float:left; width: 15vh;" class="trans">
+          <div class="verticalHorizontalCenterText"> Shift </div>
+        </div>
+
+        <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
+          <div class="verticalHorizontalCenterText"> + </div>
+        </div>
+
+        <button style="float:left; margin-left: 10px;" id="VOLDOWNKEY" class="keyOneButton">   <div style="width:100%;" id="volDownButtonText" class="verticalHorizontalCenterText">K [click to change] </div>
+        </button>
+      </div>
+
+      <div class="verticalHorizontalCenter row">
+        <div id = "buttonTitle" class="trans buttonTitle">
+          <div class="verticalHorizontalCenterText"> Vol. Up </div>
+        </div>
+
+        <div style="float:left; width: 15vh;" class="trans">
+          <div class="verticalHorizontalCenterText"> Shift </div>
+        </div>
+
+        <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
+          <div class="verticalHorizontalCenterText"> + </div>
+        </div>
+
+        <button style="float:left; margin-left: 10px;" id="VOLUPKEY" class="keyOneButton">   <div style="width:100%;" id="volUpButtonText" class="verticalHorizontalCenterText">K [click to change] </div>
+        </button>
+
+        </br>
+
+      </div>
+
+
+      </br>
+      </br>
+      </br>
+      <div id ="closeButton" class="glyphicon glyphicon-remove"></div>
+
+      </br>
+      </br>
+      </br>
+      </br>
+
+    </div>
+
+    <img id="gear" src="gear.svg"></img>
+    <webview id="foo" autosize="on" src="http://www.mood.gg" style="width:100%; height:100%;"></webview>
+    <div id='img_holder'>
+        <img id='preview_img'/>
+    </div>
+
+
+  <div style='display:none;'>
+    <textarea id="newnet" style="width:100%; height:200px;"></textarea><br />
+  </div>
+
+
+  </body>
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script>
+
+    require('./renderer.js');
+    var {ipcRenderer} = require('electron');
+
+    document.addEventListener("keydown", function (e) {
+        console.log(e.which)
+		if (e.which === 76) {
+			require('remote').getCurrentWindow().toggleDevTools();
+		} else if (e.which === 80) {
+			location.reload();
+		}
+	});
+    $( document ).ready(function() {
+
+      var playSet = false;
+      var nextSet = false;
+      var prevSet = false;
+      var volDownSet = false;
+      var volUpSet = false;
+
+      var vol = 50;
+
+      $('#setBindingsBox').hide()
+
+      //document.getElementById("setBindingsBox").style.display= "none"
+      console.log( "ready!" );
+      ipcRenderer.send('READY', "READY")
+      $('#closeButton').click(function() {
+        console.log("hi");
+        $('#setBindingsBox').hide()
+
+        if(document.getElementById("prevButtonText").innerHTML == "Type new key now. LETTERS ONLY!") {
+           document.getElementById("prevButtonText").innerHTML = "N/A"
+        }
+        if(document.getElementById("playButtonText").innerHTML == "Type new key now. LETTERS ONLY!") {
+           document.getElementById("playButtonText").innerHTML = "N/A"
+        }
+        if(document.getElementById("nextButtonText").innerHTML == "Type new key now. LETTERS ONLY!") {
+           document.getElementById("nextButtonText").innerHTML = "N/A"
+        }
+        if(document.getElementById("volDownButtonText").innerHTML == "Type new key now. LETTERS ONLY!") {
+           document.getElementById("volDownButtonText").innerHTML = "N/A"
+        }
+        if(document.getElementById("volUpButtonText").innerHTML == "Type new key now. LETTERS ONLY!") {
+           document.getElementById("volUpButtonText").innerHTML = "N/A"
+        }
+        playSet = false;
+        nextSet = false;
+        prevSet = false;
+        volDownSet = false;
+        volUpSet = false;
+        setButtons();
+      });
+
+      $('#gear').click(function() {
+        $('#setBindingsBox').show()
+        //document.getElementById("setBindingsBox").style.display= "block"
+      })
+
+      $('#PREVSONGKEY').click(function() {
+        document.getElementById("prevButtonText").innerHTML = "Type new key now. LETTERS ONLY!"
+        prevSet = true;
+      })
+
+      $('#PLAYSONGKEY').click(function() {
+        document.getElementById("playButtonText").innerHTML = "Type new key now. LETTERS ONLY!"
+        playSet = true;
+      })
+
+      $('#NEXTSONGKEY').click(function() {
+        document.getElementById("nextButtonText").innerHTML = "Type new key now. LETTERS ONLY!"
+        nextSet = true;
+      })
+
+      $('#VOLDOWNKEY').click(function() {
+        document.getElementById("volDownButtonText").innerHTML = "Type new key now. LETTERS ONLY!"
+        volDownSet = true;
+      })
+
+      $('#VOLUPKEY').click(function() {
+        document.getElementById("volUpButtonText").innerHTML = "Type new key now. LETTERS ONLY!"
+        volUpSet = true;
+      })
+
+
+      $(document).keypress(function (e) {
+        if (/[a-zA-Z]/.test(e.key)){
+          if(playSet == true) {
+            console.log("Set play to ", e.key)
+            document.getElementById("playButtonText").innerHTML = e.key.toUpperCase() + " [click to change]";
+            playSet = false;
+          }
+
+          if(nextSet == true) {
+            console.log("Set next to ", e.key)
+            document.getElementById("nextButtonText").innerHTML = e.key.toUpperCase() + " [click to change]";
+            nextSet = false;
+          }
+
+          if(prevSet == true) {
+            console.log("Set prev to ", e.key)
+            document.getElementById("prevButtonText").innerHTML = e.key.toUpperCase() + " [click to change]";
+            prevSet = false;
+          }
+
+          if(volDownSet == true) {
+            console.log("Set vol down to ", e.key)
+            document.getElementById("volDownButtonText").innerHTML = e.key.toUpperCase() + " [click to change]";
+            volDownSet = false;
+          }
+
+          if(volUpSet == true) {
+            console.log("Set vol up to ", e.key)
+            document.getElementById("volUpButtonText").innerHTML = e.key.toUpperCase() + " [click to change]";
+            volUpSet = false;
+          }
+        }
+
+        else if (playSet || nextSet || prevSet || volDownSet || volUpSet)  {
+          alert("Please type in a letter!")
+        }
+      });
+
+
+    });
+
+    const webview = document.querySelector('webview')
+
+    function setButtons() {
+      var arr = [];
+      var prevText = document.getElementById("prevButtonText").innerHTML;
+      var playText = document.getElementById("playButtonText").innerHTML;
+      var nextText = document.getElementById("nextButtonText").innerHTML;
+
+      if (prevText != "N/A") {
+        arr[0] = document.getElementById("prevButtonText").innerHTML.charAt(0);
+      }
+      else {
+        arr[0] = 'C'
+      }
+
+      if (playText != "N/A") {
+        arr[1] = document.getElementById("playButtonText").innerHTML.charAt(0);
+      }
+      else {
+        arr[1] = 'V'
+      }
+
+      if (nextText != "N/A") {
+        arr[2] = document.getElementById("nextButtonText").innerHTML.charAt(0);
+      }
+      else {
+        arr[2] = 'B'
+      }
+
+      if (volDownButtonText != "N/A") {
+        arr[3] = document.getElementById("volDownButtonText").innerHTML.charAt(0);
+      }
+      else {
+        arr[3] = 'N'
+      }
+
+      if (volUpButtonText != "N/A") {
+        arr[4] = document.getElementById("volUpButtonText").innerHTML.charAt(0);
+      }
+      else {
+        arr[4] = 'M'
+      }
+
+      console.log("Setting buttons... ", arr[0], arr[1], arr[2], arr[3], arr[4]);
+      ipcRenderer.send('SetButtons', arr);
+    }
+
+    function clearStorageButton() {
+      var answer = confirm("This is a secret button meant to clear some administrative settings. If you didn't mean to click it, press CANCEL. To clear administrative settings click ok. Warning, this may break stuff.");
+
+      if(answer){
+        var arr = ["C", "V", "B", "N", "M"];
+        console.log("Clearing storage......");
+        ipcRenderer.send('ClearStorageButton', arr);
+      }
+      else {
+          return;
+      }
+    }
+
+    ipcRenderer.on('NEXTSONG', (event, message) => {
+      console.log(message)
+      webview.executeJavaScript("document.getElementById('nextSongButton').click();")
+    })
+
+    ipcRenderer.on('PLAYSONG', (event, message) => {
+      console.log(message)
+      webview.executeJavaScript("document.getElementById('playPauseButton').click();")
+    })
+
+    ipcRenderer.on('PREVIOUSSONG', (event, message) => {
+      console.log(message)
+      webview.executeJavaScript("document.getElementById('prevSongButton').click();")
+    })
+
+    ipcRenderer.on('VOLDOWN', (event, message) => {
+      console.log(message)
+      webview.executeJavaScript("var x = $('#vol').slider(); val = $('#vol').data('slider').getValue(); x.slider('setValue', val - 10); changeVolume(val - 10)")
+    })
+
+    ipcRenderer.on('VOLUP', (event, message) => {
+      console.log(message)
+       webview.executeJavaScript("var x = $('#vol').slider(); val = $('#vol').data('slider').getValue(); x.slider('setValue', val + 10); changeVolume(val + 10)")
+    })
+
+
+    ipcRenderer.on('UPDATEBINDINGS', (event, message) => {
+      console.log("Changing bindings to... " + message)
+      json = JSON.parse(message)
+      document.getElementById("prevButtonText").innerHTML = json.PREVSONGKEY + " [click to change]"
+      document.getElementById("playButtonText").innerHTML = json.PLAYSONGKEY + " [click to change]"
+      document.getElementById("nextButtonText").innerHTML = json.NEXTSONGKEY + " [click to change]"
+      document.getElementById("volDownButtonText").innerHTML = json.VOLDOWNKEY + " [click to change]"
+      document.getElementById("volUpButtonText").innerHTML = json.VOLUPKEY + " [click to change]"
+    })
+
+    webview.addEventListener('new-window', (e) => {
+      const protocol = require('url').parse(e.url).protocol
+      if (protocol === 'http:' || protocol === 'https:') {
+          open(e.url)
+      }
+    });
+  </script>
+</html>
