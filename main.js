@@ -126,6 +126,11 @@ ipcMain.on('READY', (event, arg) => {
   mainWindow.webContents.send('UPDATEBINDINGS', JSON.stringify({PREVSONGKEY: ret[0],  PLAYSONGKEY: ret[1], NEXTSONGKEY: ret[2], VOLDOWNKEY: ret[3], VOLUPKEY: ret[4]}))
 });
 
+ipcMain.on('HEROUPDATE', (event, arg) => {
+    console.log(arg)
+    mainWindow.webContents.send('UPDATEHERO', arg)
+});
+
 
 
 
@@ -180,4 +185,4 @@ app.on('activate', function () {
 })
 
 // In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+// code. You can also put them in separate files and require them here.\

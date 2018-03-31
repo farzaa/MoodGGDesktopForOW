@@ -1,47 +1,81 @@
-// Process available to browser window.
+const fs = require('fs');
 
-//var screenshot = require('desktop-screenshot');
+var tf = require('@tensorflow/tfjs');
+
+let model;
+
+
+let classes = {0: 'solider', 1: 'genji', 2: 'reaper'}
+
+const loadModel = async () => {
+    console.log("Loading Model...")
+    model =  await tf.loadModel('https://s3-us-west-2.amazonaws.com/mood1995/neural_net/model.json');
+    console.log("Model loaded!")
+}
+
+
+async function predict(imgElement) {
+
+    const logits = tf.tidy(() => {
+        const img = tf.fromPixels(imgElement).toFloat()
+        const batched = img.reshape([1, 40, 85, 3]);
+        return model.predict(batched);
+    });
+
+
+
+    const classes = await getTopKClasses(logits, 1);
+    console.log(classes[0].className)
+
+
+}
+
+loadModel()
+
 var Jimp = require("jimp");
 
 const screenshot = require('screenshot-desktop')
-var fs = require('fs');
 
 const remote = require('electron').remote;
 const path = remote.getGlobal('curr_path')
-console.log(path)
+
+var {ipcRenderer} = require('electron');
 
 console.log("Hello, from the renderer!");
-setInterval(start_screen, 2000)
+setInterval(startScreen, 5000)
 
-function start_screen() {
-    screenshot().then((img) => {
-        console.log("Screenshot succeeded");
-        fs.writeFile(path + "/screenshot.png", img, function(err) {
+
+function startScreen() {
+    screenshot().then((fullImage) => {
+        fs.writeFile(path + "/screenshot.png", fullImage, function(err) {
             if(err) {
                 return console.log(err);
             }
-            console.log("The file was saved!");
-            Jimp.read(path + "/screenshot.png", function (err, img) {
+
+            Jimp.read(fullImage, function (err, jimpImage) {
                 if (err) throw err;
-                img.crop(1650, 860, 170, 170)     // crop that shit baby
-                     .resize(32,32)
-                     .quality(100)                // always keep it a hunded'
+                jimpImage.crop(1650, 920, 170, 80)     // crop that shit baby
+                     .resize(85, 40)
+                     .quality(100)
+                                    // always keep it a hunded'
                      .write(path + "/screenshot-cropped.jpg", function(err) {
                          if (err) throw err;
+
                          var image = new Image();
                          image.onload = function () {
-                             console.log("Loaded image!")
+
                              var preview = document.getElementById('preview_img');
-                             console.log("Changing image!")
+
+                             predict(image)
+
+
                              preview.src = image.src;
                              //$('#preview_img').attr('src', image.src)
                              $("#img_holder").append("<img src=" + image.src + ">")
-                             setTimeout(function() {
-                                 testImage(document.getElementById('preview_img'))
-                                 //$("#img_holder img:last-child").remove()
-                             }, 200)
+
+                             // ipcRenderer.send('HEROUPDATE', 'The current hero is...');
                          };
-                         console.log(path +  '/screenshot-cropped.jpg')
+
                          image.src = path + '/screenshot-cropped.jpg?' + new Date().getTime();
                      });
             });
@@ -49,37 +83,31 @@ function start_screen() {
     }).catch((err) => {
           console.log("Screenshot failed", err);
     });
-    // screenshot(path + "/screenshot.png", function(error, complete) {
-    //     if(error)
-    //         console.log("Screenshot failed", error);
-    //     // I include all the logic here to alter call the DOM.
-    //     else {
-    //         console.log("Screenshot succeeded");
-            // Jimp.read(path + "/screenshot.png", function (err, img) {
-            //     if (err) throw err;
-            //     //img.crop(1650, 860, 170, 170)     // crop that shit baby
-            //          img.resize(32,32)
-            //          .quality(100)                // always keep it a hunded'
-            //          .write(path + "/screenshot-cropped.jpg", function(err) {
-            //              if (err) throw err;
-            //              var image = new Image();
-            //              image.onload = function () {
-            //                  console.log("Loaded image!")
-            //                  var preview = document.getElementById('preview_img');
-            //                  console.log("Changing image!")
-            //                  preview.src = image.src;
-            //                  //$('#preview_img').attr('src', image.src)
-            //                  $("#img_holder").append("<img src=" + image.src + ">")
-            //                  setTimeout(function() {
-            //                      testImage(document.getElementById('preview_img'))
-            //                      //$("#img_holder img:last-child").remove()
-            //                  }, 200)
-            //              };
-            //              console.log(path +  '/screenshot-cropped.jpg')
-            //              image.src = path + '/screenshot-cropped.jpg?' + new Date().getTime();
-            //
-            //          });
-            // });
-    //     }
-    // });
+}
+
+async function getTopKClasses(logits, topK) {
+  const values = await logits.data();
+
+  const valuesAndIndices = [];
+  for (let i = 0; i < values.length; i++) {
+    valuesAndIndices.push({value: values[i], index: i});
+  }
+  valuesAndIndices.sort((a, b) => {
+    return b.value - a.value;
+  });
+  const topkValues = new Float32Array(topK);
+  const topkIndices = new Int32Array(topK);
+  for (let i = 0; i < topK; i++) {
+    topkValues[i] = valuesAndIndices[i].value;
+    topkIndices[i] = valuesAndIndices[i].index;
+  }
+
+  const topClassesAndProbs = [];
+  for (let i = 0; i < topkIndices.length; i++) {
+    topClassesAndProbs.push({
+      className: classes[topkIndices[i]],
+      probability: topkValues[i]
+    })
+  }
+  return topClassesAndProbs;
 }
