@@ -54,7 +54,9 @@ loadModel();
 
 async function predict(imgElement) {
     const logits = tf.tidy(() => {
-        const img = tf.fromPixels(imgElement).toFloat();
+        const b = tf.scalar(255);
+        const img = tf.fromPixels(imgElement).toFloat().div(b);
+        // img.print();
         const batched = img.reshape([1, 40, 85, 3]);
         return model.predict(batched);
     });
@@ -63,10 +65,11 @@ async function predict(imgElement) {
 
     let prob = classes[0].probability;
     let pred = classes[0].className;
-    // if(prob < 0.85) {
-    //     console.log("Not sure what I'm loooking at!");
-    //     return;
-    // }
+
+    if(prob != 1.0) {
+        console.log("Not sure what I'm loooking at!");
+        return;
+    }
 
     // check last 5 predictions, and only then switch playlists.
     if (heroClassPredictions.length == 5) {
@@ -77,33 +80,28 @@ async function predict(imgElement) {
         heroClassPredictions.push(pred);
         heroProbabilityValues.push(prob);
     } else {
+        console.log("Need more examples!");
         heroClassPredictions.push(pred);
         heroProbabilityValues.push(prob);
         return;
     }
 
-    let newH = checkChamp(heroClassPredictions);
+    console.log(heroClassPredictions);
+    console.log(heroProbabilityValues);
 
+    let newH = checkChamp(heroClassPredictions);
     // not sure about current champ at all, backout!
     if (newH == null) {
         return
     }
 
     if (newH != curr || curr == null) {
-        console.log(heroClassPredictions);
-        console.log(heroProbabilityValues);
-
-
-
         webview.removeEventListener('did-start-loading', loadstart)
         webview.removeEventListener('did-stop-loading', loadstop)
         webview.addEventListener('did-start-loading', loadstart)
         webview.addEventListener('did-stop-loading', loadstop)
 
         webview.loadURL('http://localhost:3000/owchoosechampspecial?championname=' + newH);
-
-
-
 
         curr = newH;
     }
@@ -115,13 +113,11 @@ function startScreen() {
             if(err) {
                 return console.log(err);
             }
-
             Jimp.read(fullImage, function (err, jimpImage) {
                 if (err) throw err;
-                jimpImage.crop(1650, 920, 170, 80)     // crop that shit baby
+                jimpImage.crop(1650, 920, 170, 80)
                      .resize(85, 40)
                      .quality(100)
-                                    // always keep it a hunded'
                      .write(path + "/screenshot-cropped.jpg", function(err) {
                          if (err) throw err;
                          var image = new Image();
