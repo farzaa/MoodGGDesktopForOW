@@ -128,12 +128,7 @@
     </div>
 
     <img id="gear" src="gear.svg"></img>
-    <webview id="foo" autosize="on" src="http://www.mood.gg/choosechamp?championname=Taric" style="width:100%; height:100%;"></webview>
-    <img id='image_to_test'/>
-    <div id='img_holder'>
-        <img id='preview_img'/>
-    </div>
-
+    <webview id="foo" autosize="on" src="http://localhost:3000/ow" style="width:100%; height:100%;"></webview>
 
   <div style='display:none;'>
     <textarea id="newnet" style="width:100%; height:200px;"></textarea><br />
@@ -144,8 +139,6 @@
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script>
-
-    require('./renderer.js');
     var {ipcRenderer} = require('electron');
 
     document.addEventListener("keydown", function (e) {
@@ -157,7 +150,7 @@
 		}
 	});
     $( document ).ready(function() {
-
+      require('./renderer.js');
       var playSet = false;
       var nextSet = false;
       var prevSet = false;
@@ -273,43 +266,25 @@
     const webview = document.querySelector('webview')
 
     // Keep track of webiew states.
-    // If we get two loadstops in a row, this mena
-    onload = () => {
+    // If we get two loadstops in a row.
+    const loadstart = () => {
+      console.log("LOADSTART")
+    }
 
-      const loadstart = () => {
-        console.log("LOADSTART")
-      }
-
-      const loadstop = () => {
-
-          console.log("LOADSTOP");
-          setTimeout(function(e) {
-              webview.executeJavaScript("document.getElementById('mainBut').click()");
-          }, 2000)
-
-          // keep trying to press the play button if its there!
-          for (var i = 0; i < 10; i++) {
-              tryAndPlayVideo(i)
-          }
-      }
-
-      webview.addEventListener('did-start-loading', loadstart)
-      webview.addEventListener('did-stop-loading', loadstop)
+    const loadstop = () => {
+        console.log("LOADSTOP");
+        for (var i = 0; i < 10; i++) {
+            tryAndPlayVideo(i)
+        }
     }
 
     function tryAndPlayVideo(i) {
-        var command = "if (document.getElementById('playPauseButton').name == 'play') { document.getElementById('playPauseButton').click(); }"
+        var command = "if (document.getElementById('playPauseButton').name == 'play' && playing == false) { document.getElementById('playPauseButton').click(); }"
         setTimeout(function(e) {
             console.log("Trying to play! " + i);
             webview.executeJavaScript(command);
         }, 1000 * i);
     }
-
-
-
-    ipcRenderer.on('UPDATEHERO', (event, message) => {
-      console.log(message)
-    })
 
     function setButtons() {
       var arr = [];

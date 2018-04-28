@@ -25,9 +25,9 @@ storage.get('DEFAULT', function(error, data) {
       if (error)
         throw error;
     });
-    ret[0] = "C"
-    ret[1] = "V"
-    ret[2] = "B"
+    ret[0] = "J"
+    ret[1] = "K"
+    ret[2] = "L"
     ret[3] = "N"
     ret[4] = "M"
   }
@@ -47,10 +47,11 @@ gkm.events.on('key.pressed', function(data) {
   console.log(data);
 
   //console.log("Shift... " + shift)
-  if(data == "Left Shift") {
+  if(data == "Left Control") {
     console.log("PRESSED SHIFT")
     shift = true;
   }
+
 });
 
 gkm.events.on('key.released', function(data) {
