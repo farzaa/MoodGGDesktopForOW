@@ -10,10 +10,6 @@
     <!-- Insert this line above script imports  -->
     <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
 
-    <!-- normal script imports etc  -->
-    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-
-
     <!-- Insert this line after script imports -->
     <script>if (window.module) module = window.module;</script>
   </head>
@@ -136,8 +132,11 @@
 
 
   </body>
+  <!-- normal script imports etc  -->
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
   <script>
     var {ipcRenderer} = require('electron');
 

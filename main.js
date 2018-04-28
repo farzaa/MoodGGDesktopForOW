@@ -91,7 +91,7 @@ gkm.events.on('key.released', function(data) {
     }
   }
 
-  if(data == "Left Shift") {
+  if(data == "Left Control") {
     shift = false;
   }
 

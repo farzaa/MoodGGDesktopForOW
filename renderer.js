@@ -66,13 +66,13 @@ async function predict(imgElement) {
     let prob = classes[0].probability;
     let pred = classes[0].className;
 
-    if(prob != 1.0) {
-        console.log("Not sure what I'm loooking at!");
+    if(prob < 0.97) {
+        console.log("Not a high enough probability");
         return;
     }
 
     // check last 5 predictions, and only then switch playlists.
-    if (heroClassPredictions.length == 5) {
+    if (heroClassPredictions.length == 3) {
         // remove oldest prediction to keep array at constant size < 5.
         heroClassPredictions.shift();
         heroProbabilityValues.shift()
@@ -89,7 +89,7 @@ async function predict(imgElement) {
     console.log(heroClassPredictions);
     console.log(heroProbabilityValues);
 
-    let newH = checkChamp(heroClassPredictions);
+    let newH = checkChamp(heroClassPredictions, heroProbabilityValues);
     // not sure about current champ at all, backout!
     if (newH == null) {
         return
@@ -135,12 +135,18 @@ function startScreen() {
 
 // Simply takes an array of predictions and makes sure we predicted the same thing 5 times.
 // Otherwise, just return null.
-function checkChamp(arr) {
+function checkChamp(arr, arrTwo) {
+     // First we check that all the predictions beleive they found the SAME hero.
      let s = new Set(arr)
      if(s.size == 1) {
         var it = s.values();
         var first = it.next();
-        return first.value;
+        // Lastly, we do a quick check to make sure we had a "100%" prediction at least once.
+        if (arrTwo.includes(1)) {
+            return first.value;
+        } else {
+            return null;
+        }
      } else {
          return null;
      }
