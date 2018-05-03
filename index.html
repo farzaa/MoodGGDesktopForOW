@@ -28,7 +28,7 @@
         </div>
 
         <div style="float:left; width: 15vh;" class="trans">
-          <div class="verticalHorizontalCenterText"> Shift </div>
+          <div class="verticalHorizontalCenterText"> Control </div>
         </div>
 
         <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
@@ -45,7 +45,7 @@
         </div>
 
         <div style="float:left; width: 15vh;" class="trans">
-          <div class="verticalHorizontalCenterText"> Shift </div>
+          <div class="verticalHorizontalCenterText"> Control </div>
         </div>
 
         <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
@@ -62,7 +62,7 @@
         </div>
 
         <div style="float:left; width: 15vh;" class="trans">
-          <div class="verticalHorizontalCenterText"> Shift </div>
+          <div class="verticalHorizontalCenterText"> Control </div>
         </div>
 
         <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
@@ -79,7 +79,7 @@
         </div>
 
         <div style="float:left; width: 15vh;" class="trans">
-          <div class="verticalHorizontalCenterText"> Shift </div>
+          <div class="verticalHorizontalCenterText"> Control </div>
         </div>
 
         <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
@@ -96,7 +96,7 @@
         </div>
 
         <div style="float:left; width: 15vh;" class="trans">
-          <div class="verticalHorizontalCenterText"> Shift </div>
+          <div class="verticalHorizontalCenterText"> Control </div>
         </div>
 
         <div style="float:left; width: 15vh; margin-left: 10px;" class="trans">
@@ -136,7 +136,24 @@
   <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script>
+  var openCVReady = false;
+  var template = null;
+  function onOpenCvReady() {
+      console.log("Loaded OpenCV");
+      openCVReady = true;
 
+
+      var image = new Image();
+      image.onload = function () {
+          let tmpImage = image;
+          template = cv.imread(tmpImage);
+      };
+
+      image.src = 'template.jpg?' + new Date().getTime();
+  }
+  </script>
+  <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
   <script>
     var {ipcRenderer} = require('electron');
 
@@ -278,7 +295,7 @@
     }
 
     function tryAndPlayVideo(i) {
-        var command = "if (document.getElementById('playPauseButton').name == 'play' && playing == false) { document.getElementById('playPauseButton').click(); }"
+        var command = "if (document.getElementById('playPauseButton').name == 'play' && playing == false) { player.playVideo(); }"
         setTimeout(function(e) {
             console.log("Trying to play! " + i);
             webview.executeJavaScript(command);
