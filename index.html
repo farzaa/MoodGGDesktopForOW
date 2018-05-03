@@ -18,8 +18,11 @@
 
       <div id ="settings" class="verticalHorizontalCenter row">
       Settings
-      </br>
-      <span style="font-size: 3vh;"> <span onClick="clearStorageButton();"> Click the X to save your settings!  </span></span>
+      <span style="font-size: 3vh;"> <span onClick="clearStorageButton();"> [Click the X to save your settings!]  </span>
+      </div>
+
+      <div id ="detection" class="verticalHorizontalCenter row">
+      <span style="font-size: 2.5vh;"> <input id="detectionFlag" type="checkbox"> Automatic Hero Detection toggle. If you have a slower PC, turn this off! (checkmark = on) <br> </span>
       </div>
 
       <div class="verticalHorizontalCenter row">
@@ -157,6 +160,8 @@
   <script>
     var {ipcRenderer} = require('electron');
 
+    var heroDetectionOn = false;
+
     document.addEventListener("keydown", function (e) {
         console.log(e.which)
 		if (e.which === 76) {
@@ -205,6 +210,7 @@
         volDownSet = false;
         volUpSet = false;
         setButtons();
+
       });
 
       $('#gear').click(function() {
@@ -343,7 +349,17 @@
         arr[4] = 'M'
       }
 
-      console.log("Setting buttons... ", arr[0], arr[1], arr[2], arr[3], arr[4]);
+      // check hero detector value!
+      let c = $('#detectionFlag:checked').val();
+      if(c == 'on') {
+          arr[5] = true;
+          heroDetectionOn = true;
+      } else {
+          arr[5] = false;
+          heroDetectionOn = false;
+      }
+
+      console.log("Setting buttons... ", arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
       ipcRenderer.send('SetButtons', arr);
     }
 
@@ -394,6 +410,11 @@
       document.getElementById("nextButtonText").innerHTML = json.NEXTSONGKEY + " [click to change]"
       document.getElementById("volDownButtonText").innerHTML = json.VOLDOWNKEY + " [click to change]"
       document.getElementById("volUpButtonText").innerHTML = json.VOLUPKEY + " [click to change]"
+
+      console.log("SETTING ", json.HERODETECTIONFLAG);
+      document.querySelector('#detectionFlag').checked = json.HERODETECTIONFLAG;
+
+      heroDetectionOn = json.HERODETECTIONFLAG;
     })
 
     webview.addEventListener('new-window', (e) => {

@@ -21,15 +21,16 @@ storage.get('DEFAULT', function(error, data) {
     throw error;
   if(data.PLAYSONGKEY == undefined) {
     console.log("Defualt doesn't exist! Lets make it")
-    storage.set('DEFAULT', {PREVSONGKEY: "C",  PLAYSONGKEY: "V", NEXTSONGKEY: "B", VOLDOWNKEY: "N", VOLUPKEY: "M"}, function(error) {
+    storage.set('DEFAULT', {PREVSONGKEY: "C",  PLAYSONGKEY: "V", NEXTSONGKEY: "B", VOLDOWNKEY: "N", VOLUPKEY: "M", HERODETECTIONFLAG: true}, function(error) {
       if (error)
         throw error;
     });
-    ret[0] = "J"
-    ret[1] = "K"
-    ret[2] = "L"
+    ret[0] = "C"
+    ret[1] = "V"
+    ret[2] = "B"
     ret[3] = "N"
     ret[4] = "M"
+    ret[5] = true
   }
 
   else {
@@ -38,6 +39,7 @@ storage.get('DEFAULT', function(error, data) {
     ret[2] = data.NEXTSONGKEY;
     ret[3] = data.VOLDOWNKEY;
     ret[4] = data.VOLUPKEY;
+    ret[5] = data.HERODETECTIONFLAG;
   }
 });
 
@@ -103,13 +105,14 @@ ipcMain.on('SetButtons', (event, arg) => {
     storage.clear(function(error) {
       if (error)
         throw error;
-      storage.set('DEFAULT', {PREVSONGKEY: arg[0],  PLAYSONGKEY: arg[1], NEXTSONGKEY: arg[2], VOLDOWNKEY: arg[3], VOLUPKEY: arg[4]}, function(error) {
+      storage.set('DEFAULT', {PREVSONGKEY: arg[0],  PLAYSONGKEY: arg[1], NEXTSONGKEY: arg[2], VOLDOWNKEY: arg[3], VOLUPKEY: arg[4], HERODETECTIONFLAG: arg[5]}, function(error) {
         if (error) throw error;
         ret[0] = arg[0];
         ret[1] = arg[1];
         ret[2] = arg[2];
         ret[3] = arg[3];
         ret[4] = arg[4];
+        ret[5] = arg[5];
       });
     });
 });
@@ -123,8 +126,9 @@ ipcMain.on('ClearStorageButton', (event, arg) => {
 });
 
 
+
 ipcMain.on('READY', (event, arg) => {
-  mainWindow.webContents.send('UPDATEBINDINGS', JSON.stringify({PREVSONGKEY: ret[0],  PLAYSONGKEY: ret[1], NEXTSONGKEY: ret[2], VOLDOWNKEY: ret[3], VOLUPKEY: ret[4]}))
+  mainWindow.webContents.send('UPDATEBINDINGS', JSON.stringify({PREVSONGKEY: ret[0],  PLAYSONGKEY: ret[1], NEXTSONGKEY: ret[2], VOLDOWNKEY: ret[3], VOLUPKEY: ret[4], HERODETECTIONFLAG: ret[5]}))
 });
 
 ipcMain.on('HEROUPDATE', (event, arg) => {

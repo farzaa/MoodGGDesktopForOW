@@ -29,7 +29,7 @@ html, body {
     position: relative;
     left: 3%;
     top: 10%;
-   
+
 }
 
 .verticalHorizontalCenterText {
@@ -90,13 +90,13 @@ html, body {
   position: relative;
   z-index: 1;
   text-align: center;
-  line-height: 42px;  
+  line-height: 42px;
 }
 
 .buttonTitle {
-  float: left; 
-  margin-right: 10px; 
-  width: 150px; 
+  float: left;
+  margin-right: 10px;
+  width: 150px;
   background-color: #20B2AA;
 }
 
@@ -124,3 +124,7 @@ html, body {
   font-size: 6vh;
 }
 
+#detection {
+  color: white;
+  font-size: 6vh;
+}

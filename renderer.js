@@ -42,14 +42,14 @@ let curr = null;
 let heroClassPredictions = [];
 let heroProbabilityValues =[]
 
-let potgScreenIsOn = false;
 
+let currentJimpBuffer = null;
 // Load model from AWS, and than start taking screenshots.
 const loadModel = async () => {
     console.log("Loading Model...");
     model =  await tf.loadModel('https://s3-us-west-2.amazonaws.com/mood1995/neural_net_all_heroes/model.json');
     console.log("Model loaded!");
-    setInterval(startScreen, 250)
+    setInterval(startScreen, 500);
 }
 
 loadModel();
@@ -102,55 +102,62 @@ async function predict(imgElement) {
     }
 
     if (curr == null || newH != curr) {
-        webview.removeEventListener('did-start-loading', loadstart)
-        webview.removeEventListener('did-stop-loading', loadstop)
-        webview.addEventListener('did-start-loading', loadstart)
-        webview.addEventListener('did-stop-loading', loadstop)
+        // right before we switch, make sure we aren't on the POTG screen.
+        // we only need to check this once upon a switch!
+        // if it is the POTG screen, clear our arrays, and return, do NOT
+        // change the playlist!
+        console.log("Attempting to switch, first need to check POTG!")
+        detectPOTGScreen(function(detectedPOTG) {
+            if (detectedPOTG == true) {
+                console.log("POTG TRUEEEEEE");
+                heroClassPredictions = [];
+                heroProbabilityValues = [];
+                return;
+            } else {
+                webview.removeEventListener('did-start-loading', loadstart)
+                webview.removeEventListener('did-stop-loading', loadstop)
+                webview.addEventListener('did-start-loading', loadstart)
+                webview.addEventListener('did-stop-loading', loadstop)
 
-        webview.loadURL('http://localhost:3000/owchoosechampspecial?championname=' + newH);
+                webview.loadURL('http://localhost:3000/owchoosechampspecial?championname=' + newH);
 
-        curr = newH;
+                curr = newH;
+            }
+        });
     }
 }
 
 function startScreen() {
+    if (heroDetectionOn == false) {
+        return;
+    }
+
     screenshot().then((fullImage) => {
-        // path + "/screenshot.png"
-        // /Users/flynn/Downloads/Two/Screenshot (5)/Screenshot (22).png
         fs.writeFile(path + "/screenshot.png", fullImage, function(err) {
             if(err) {
                 return console.log(err);
             }
             // Once every second, check if we are on the POTG screen.
-            Jimp.read("my_screen.jpg", function (err, jimpImage) {
+            Jimp.read(fullImage, function (err, jimpImage) {
                 if (err) throw err;
-                jimpImage.crop(35, 35, 210, 35)
-                     .quality(100)
-                     .write(path + "/screenshot-potg-cropped.jpg", function(err) {
-                         if (err) throw err;
-                         var image = new Image();
-                         image.onload = function () {
-                             checkPlayOfTheGame(image);
-                         };
-                         image.src = path + '/screenshot-potg-cropped.jpg?' + new Date().getTime();
-                     });
-            });
 
-            Jimp.read("my_screen.jpg", function (err, jimpImage) {
-                if (err) throw err;
-                jimpImage.crop(1650, 920, 170, 80)
+                // I save the buffer for POTG detection
+                currentJimpBuffer = jimpImage.clone();
+
+                // work required for hero detection.
+                jimpImage.clone().crop(1650, 920, 170, 80)
                      .resize(85, 40)
                      .quality(100)
                      .write(path + "/screenshot-cropped.jpg", function(err) {
                          if (err) throw err;
                          var image = new Image();
                          image.onload = function () {
+                             // actually predict hero.
                              predict(image)
                          };
                          image.src = path + '/screenshot-cropped.jpg?' + new Date().getTime();
                      });
             });
-
         });
     }).catch((err) => {
           console.log("Screenshot failed", err);
@@ -166,7 +173,7 @@ function checkChamp(arr, arrTwo) {
         var it = s.values();
         var first = it.next();
         // Lastly, we do a quick check to make sure we had a "100%" prediction at least once.
-        if (arrTwo.filter(item => item == 1).length >= 2) {
+        if (arrTwo.filter(item => item == 1).length >= 2) { // >= 2
             return first.value;
         } else {
             return null;
@@ -203,19 +210,27 @@ async function getTopKClasses(logits, topK) {
   return topClassesAndProbs;
 }
 
-// function loadTemplate() {
-//     var image = new Image();
-//     image.onload = function () {
-//         template = image;
-//         template = cv.imread(template);
-//
-//     };
-//     image.src = path + '/template.jpg?' + new Date().getTime();
-// }
-//
-// loadTemplate();
+function detectPOTGScreen(callback) {
+    if(currentJimpBuffer == null) {
+        console.log("currentJimpBuffer was null!");
+        callback(false)
+    }
 
-function checkPlayOfTheGame(imgElement) {
+    currentJimpBuffer.clone().crop(35, 35, 210, 35)
+     .quality(100)
+     .write(path + "/screenshot-potg-cropped.jpg", function(err) {
+         if (err) throw err;
+         var image = new Image();
+         image.onload = function () {
+             callback(doTemplateMatch(image))
+
+         };
+         image.src = path + '/screenshot-potg-cropped.jpg?' + new Date().getTime();
+     });
+}
+
+
+function doTemplateMatch(imgElement) {
     if (!(openCVReady)) {
         console.log("OpenCV still not ready!");
         return false;
@@ -233,18 +248,17 @@ function checkPlayOfTheGame(imgElement) {
 
     // sq_diff normed 1 - minVal
     // coeff_normed max_val
-
     let result = cv.minMaxLoc(dst, mask);
-    console.log("template match gave us probability ... ", result.maxVal);
-    if(result.maxVal < 0.90) {
-        console.log("Didn't detect play of the game screen!");
-    }
-
-    // let maxPoint = result.maxLoc;
-    // let color = new cv.Scalar(255, 0, 0, 255);
-    // let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
-    // cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
-    // cv.imshow('canvasOutput', src);
     src.delete(); dst.delete(); mask.delete();
-    console.log("Loaded image as mat!");
+
+    console.log("template match gave us probability ... ", result.maxVal);
+    // threshold
+    if(result.maxVal < 0.80) {
+        console.log("Didn't detect play of the game screen!");
+        return false;
+    } else {
+        // successfully detected!
+        console.log("Successful detection of POTG!")
+        return true;
+    }
 }
