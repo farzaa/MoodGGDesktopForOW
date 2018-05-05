@@ -238,7 +238,7 @@ function doTemplateMatch(imgElement) {
         return false;
     }
 
-    if(template == null || templateTwo == null) {
+    if(template == null) {
         console.log("Templates still null");
         return false;
     }
@@ -254,32 +254,11 @@ function doTemplateMatch(imgElement) {
     src.delete(); dst.delete(); mask.delete();
 
     console.log("template match gave us probability ... ", result.maxVal);
+
     // threshold
     if(result.maxVal < 0.80) {
-        // now do the same thing again for another template, the kill spectate screen.
-        src = cv.imread(imgElement);
-        dst = new cv.Mat();
-        mask = new cv.Mat();
-        cv.matchTemplate(src, templateTwo, dst, cv.TM_CCOEFF_NORMED, mask);
-
-        // sq_diff normed 1 - minVal
-        // coeff_normed max_val
-        result = cv.minMaxLoc(dst, mask);
-        src.delete(); dst.delete(); mask.delete();
-
-        console.log("template_two match gave us probability ... ", result.maxVal);
-        // threshold
-        if(result.maxVal < 0.80) {
-            console.log("Didn't detect elimination screen");
-            return false;
-        }
-        // successfully detected!
-        else {
-            console.log("Successful detection of kill cam screen!")
-            return true;
-        }
+        return false;
     }
-
     // successfully detected!
     else {
         console.log("Successful detection of POTG!")

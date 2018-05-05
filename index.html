@@ -3,7 +3,7 @@
   <head>
      <meta charset="utf-8">
     <title>Mood.gg Desktop (Overwatch Edition)</title>
-    <link rel="stylesheet" type="text/css" href="index.css"></link>
+    <link rel="stylesheet" type="text/css" href="css/index.css"></link>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
@@ -126,7 +126,7 @@
 
     </div>
 
-    <img id="gear" src="gear.svg"></img>
+    <img id="gear" src="assets/gear.svg"></img>
     <webview id="foo" autosize="on" src="https://mood.gg/ow2" style="width:100%; height:100%;"></webview>
 
   <div style='display:none;'>
@@ -142,7 +142,7 @@
   <script>
   var openCVReady = false;
   var template = null;
-  var templateTwo = null;
+
   function onOpenCvReady() {
       console.log("Loaded OpenCV");
       openCVReady = true;
@@ -154,16 +154,6 @@
           template = cv.imread(tmpImage);
       };
       image.src = 'template.jpg?' + new Date().getTime();
-
-      // Kill cam template.
-      var imageTwo = new Image();
-      imageTwo.onload = function () {
-          let tmpImageTwo = imageTwo;
-          templateTwo = cv.imread(tmpImageTwo);
-      };
-
-      imageTwo.src = 'template_2.jpg?' + new Date().getTime();
-
 
   }
   </script>
