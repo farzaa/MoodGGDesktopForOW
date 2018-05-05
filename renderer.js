@@ -119,7 +119,7 @@ async function predict(imgElement) {
                 webview.addEventListener('did-start-loading', loadstart)
                 webview.addEventListener('did-stop-loading', loadstop)
 
-                webview.loadURL('http://localhost:3000/owchoosechampspecial?championname=' + newH);
+                webview.loadURL('https://mood.gg/owchoosechampspecial?championname=' + newH);
 
                 curr = newH;
             }
@@ -230,14 +230,16 @@ function detectPOTGScreen(callback) {
 }
 
 
+// This does a template match against the play of the game screen
+// AND the kill cam screen. This was added later.
 function doTemplateMatch(imgElement) {
     if (!(openCVReady)) {
         console.log("OpenCV still not ready!");
         return false;
     }
 
-    if(template == null) {
-        console.log("Template still null");
+    if(template == null || templateTwo == null) {
+        console.log("Templates still null");
         return false;
     }
 
@@ -254,11 +256,34 @@ function doTemplateMatch(imgElement) {
     console.log("template match gave us probability ... ", result.maxVal);
     // threshold
     if(result.maxVal < 0.80) {
-        console.log("Didn't detect play of the game screen!");
-        return false;
-    } else {
+        // now do the same thing again for another template, the kill spectate screen.
+        src = cv.imread(imgElement);
+        dst = new cv.Mat();
+        mask = new cv.Mat();
+        cv.matchTemplate(src, templateTwo, dst, cv.TM_CCOEFF_NORMED, mask);
+
+        // sq_diff normed 1 - minVal
+        // coeff_normed max_val
+        result = cv.minMaxLoc(dst, mask);
+        src.delete(); dst.delete(); mask.delete();
+
+        console.log("template_two match gave us probability ... ", result.maxVal);
+        // threshold
+        if(result.maxVal < 0.80) {
+            console.log("Didn't detect elimination screen");
+            return false;
+        }
         // successfully detected!
+        else {
+            console.log("Successful detection of kill cam screen!")
+            return true;
+        }
+    }
+
+    // successfully detected!
+    else {
         console.log("Successful detection of POTG!")
         return true;
     }
+
 }

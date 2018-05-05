@@ -127,7 +127,7 @@
     </div>
 
     <img id="gear" src="gear.svg"></img>
-    <webview id="foo" autosize="on" src="http://localhost:3000/ow" style="width:100%; height:100%;"></webview>
+    <webview id="foo" autosize="on" src="https://mood.gg/ow2" style="width:100%; height:100%;"></webview>
 
   <div style='display:none;'>
     <textarea id="newnet" style="width:100%; height:200px;"></textarea><br />
@@ -142,18 +142,29 @@
   <script>
   var openCVReady = false;
   var template = null;
+  var templateTwo = null;
   function onOpenCvReady() {
       console.log("Loaded OpenCV");
       openCVReady = true;
 
-
+      // POTG template.
       var image = new Image();
       image.onload = function () {
           let tmpImage = image;
           template = cv.imread(tmpImage);
       };
-
       image.src = 'template.jpg?' + new Date().getTime();
+
+      // Kill cam template.
+      var imageTwo = new Image();
+      imageTwo.onload = function () {
+          let tmpImageTwo = imageTwo;
+          templateTwo = cv.imread(tmpImageTwo);
+      };
+
+      imageTwo.src = 'template_2.jpg?' + new Date().getTime();
+
+
   }
   </script>
   <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
